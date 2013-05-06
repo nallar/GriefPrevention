@@ -28,10 +28,10 @@ import org.bukkit.entity.Player;
 public class PlayerKickBanTask implements Runnable 
 {
 	//player to kick or ban
-	private Player player;
+	private final Player player;
 	
 	//ban message.  if null, don't ban
-	private String banReason;
+	private final String banReason;
 	
 	public PlayerKickBanTask(Player player, String banReason)
 	{

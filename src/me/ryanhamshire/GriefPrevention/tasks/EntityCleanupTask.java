@@ -38,7 +38,7 @@ import org.bukkit.entity.Vehicle;
 public class EntityCleanupTask implements Runnable 
 {
 	//where to start cleaning in the list of entities
-	private double percentageStart;
+	private final double percentageStart;
 	
 	public EntityCleanupTask(double percentageStart)
 	{
@@ -49,67 +49,62 @@ public class EntityCleanupTask implements Runnable
 	public void run() 
 	{
 		ArrayList<World> worlds = GriefPrevention.instance.config_claims_enabledCreativeWorlds;
-		
-		for(int i = 0; i < worlds.size(); i++)
+
+		for (World world : worlds)
 		{
-			World world = worlds.get(i);
-			
 			List<Entity> entities = world.getEntities();
-			
+
 			//starting and stopping point.  each execution of the task scans 10% of the server's (loaded) entities
-			int j = (int)(entities.size() * this.percentageStart);
-			int k = (int)(entities.size() * (this.percentageStart + .1));
+			int j = (int) (entities.size() * this.percentageStart);
+			int k = (int) (entities.size() * (this.percentageStart + .1));
 			Claim cachedClaim = null;
-			for(; j < entities.size() && j < k; j++)
+			for (; j < entities.size() && j < k; j++)
 			{
 				Entity entity = entities.get(j);
-				
+
 				boolean remove = false;
-				if(entity instanceof Boat) //boats must be occupied
+				if (entity instanceof Boat) //boats must be occupied
 				{
-					Boat boat = (Boat)entity;
-					if(boat.isEmpty()) remove = true;
-				}
-				
-				else if(entity instanceof Vehicle)
+					Boat boat = (Boat) entity;
+					if (boat.isEmpty()) remove = true;
+				} else if (entity instanceof Vehicle)
 				{
-					Vehicle vehicle = (Vehicle)entity;
-					
+					Vehicle vehicle = (Vehicle) entity;
+
 					//minecarts in motion must be occupied by a player
-					if(vehicle.getVelocity().lengthSquared() != 0)
+					if (vehicle.getVelocity().lengthSquared() != 0)
 					{
-						if(vehicle.isEmpty() || !(vehicle.getPassenger() instanceof Player))
+						if (vehicle.isEmpty() || !(vehicle.getPassenger() instanceof Player))
 						{
 							remove = true;
 						}
 					}
-					
+
 					//stationary carts must be on rails
 					else
 					{
 						Material material = world.getBlockAt(vehicle.getLocation()).getType();
-						if(material != Material.RAILS && material != Material.POWERED_RAIL && material != Material.DETECTOR_RAIL)
+						if (material != Material.RAILS && material != Material.POWERED_RAIL && material != Material.DETECTOR_RAIL)
 						{
 							remove = true;
 						}
 					}
 				}
-				
+
 				//all non-player entities must be in claims
-				else if(!(entity instanceof Player))
+				else if (!(entity instanceof Player))
 				{
 					Claim claim = GriefPrevention.instance.dataStore.getClaimAt(entity.getLocation(), false, cachedClaim);
-					if(claim != null)
+					if (claim != null)
 					{
 						cachedClaim = claim;
-					}
-					else
+					} else
 					{
 						remove = true;
 					}
 				}
-				
-				if(remove)
+
+				if (remove)
 				{
 					entity.remove();
 				}

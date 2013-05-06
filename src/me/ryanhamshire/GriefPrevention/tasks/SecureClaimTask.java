@@ -30,7 +30,7 @@ import org.bukkit.entity.Player;
 //secures a claim after a siege looting window has closed
 public class SecureClaimTask implements Runnable 
 {
-	private SiegeData siegeData;
+	private final SiegeData siegeData;
 	
 	public SecureClaimTask(SiegeData siegeData)
 	{
@@ -49,10 +49,9 @@ public class SecureClaimTask implements Runnable
 			
 			//eject bad guys
 			Player [] onlinePlayers = GriefPrevention.instance.getServer().getOnlinePlayers();
-			for(int j = 0; j < onlinePlayers.length; j++)
+			for (Player player : onlinePlayers)
 			{
-				Player player = onlinePlayers[j];
-				if(claim.contains(player.getLocation(), false, false) && claim.allowAccess(player) != null)
+				if (claim.contains(player.getLocation(), false, false) && claim.allowAccess(player) != null)
 				{
 					GriefPrevention.sendMessage(player, TextMode.Err, Messages.SiegeDoorsLockedEjection);
 					GriefPrevention.instance.ejectPlayer(player);

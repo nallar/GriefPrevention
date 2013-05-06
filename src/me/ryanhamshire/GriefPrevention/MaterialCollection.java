@@ -34,14 +34,12 @@ public class MaterialCollection
 	
 	boolean Contains(MaterialInfo material)
 	{
-		for(int i = 0; i < this.materials.size() ; i++)
+		for (MaterialInfo thisMaterial : this.materials)
 		{
-			MaterialInfo thisMaterial = this.materials.get(i);
-			if(material.typeID == thisMaterial.typeID && (thisMaterial.allDataValues || material.data == thisMaterial.data))
+			if (material.typeID == thisMaterial.typeID && (thisMaterial.allDataValues || material.data == thisMaterial.data))
 			{
 				return true;
-			}
-			else if(thisMaterial.typeID > material.typeID)
+			} else if (thisMaterial.typeID > material.typeID)
 			{
 				return false;
 			}
@@ -54,9 +52,9 @@ public class MaterialCollection
 	public String toString()
 	{
 		StringBuilder stringBuilder = new StringBuilder();
-		for(int i = 0; i < this.materials.size(); i++)
+		for (MaterialInfo material : this.materials)
 		{
-			stringBuilder.append(this.materials.get(i).toString() + " ");
+			stringBuilder.append(material.toString()).append(' ');
 		}
 		
 		return stringBuilder.toString();

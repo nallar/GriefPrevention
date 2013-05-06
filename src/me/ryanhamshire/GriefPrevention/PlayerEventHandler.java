@@ -67,7 +67,7 @@ class PlayerEventHandler implements Listener
 	private ArrayList<IpBanInfo> tempBannedIps = new ArrayList<IpBanInfo>();
 	
 	//number of milliseconds in a day
-	private final long MILLISECONDS_IN_DAY = 1000 * 60 * 60 * 24;
+	private static final long MILLISECONDS_IN_DAY = 1000 * 60 * 60 * 24;
 	
 	//timestamps of login and logout notifications in the last minute
 	private ArrayList<Long> recentLoginLogoutNotifications = new ArrayList<Long>();
@@ -277,7 +277,7 @@ class PlayerEventHandler implements Listener
 				
 				//send a fake message so the player doesn't realize he's muted
 				//less information for spammers = less effective spam filter dodging
-				player.sendMessage("<" + player.getName() + "> " + message);
+				player.sendMessage('<' + player.getName() + "> " + message);
 				
 				//cancelling the event guarantees other players don't receive the message
 				return true;
@@ -355,26 +355,24 @@ class PlayerEventHandler implements Listener
 			
 			for(int i = 1; i < args.length; i++)
 			{
-				logMessageBuilder.append(args[i]).append(" ");
+				logMessageBuilder.append(args[i]).append(' ');
 			}
 			
 			String logMessage = logMessageBuilder.toString();
 			
 			Player [] players = GriefPrevention.instance.getServer().getOnlinePlayers();
 			if(!event.getPlayer().hasPermission("griefprevention.eavesdrop")) {
-				for(int i = 0; i < players.length; i++)
+				for (Player player : players)
 				{
-					Player player = players[i];
-					if(player.hasPermission("griefprevention.eavesdrop") && !player.getName().equalsIgnoreCase(args[1]))
+					if (player.hasPermission("griefprevention.eavesdrop") && !player.getName().equalsIgnoreCase(args[1]))
 					{
 						player.sendMessage(ChatColor.GRAY + logMessage);
 					}
 				}
 			}else {
-				for(int i = 0; i < players.length; i++)
+				for (Player player : players)
 				{
-					Player player = players[i];
-					if(player.hasPermission("griefprevention.admineavesdrop") && !player.getName().equalsIgnoreCase(args[1]))
+					if (player.hasPermission("griefprevention.admineavesdrop") && !player.getName().equalsIgnoreCase(args[1]))
 					{
 						player.sendMessage(ChatColor.GRAY + logMessage);
 					}
@@ -534,11 +532,11 @@ class PlayerEventHandler implements Listener
 						
 						//notify any online ops
 						Player [] players = GriefPrevention.instance.getServer().getOnlinePlayers();
-						for(int k = 0; k < players.length; k++)
+						for (Player player1 : players)
 						{
-							if(players[k].isOp())
+							if (player1.isOp())
 							{
-								GriefPrevention.sendMessage(players[k], TextMode.Success, Messages.AutoBanNotify, player.getName(), info.bannedAccountName);
+								GriefPrevention.sendMessage(player1, TextMode.Success, Messages.AutoBanNotify, player.getName(), info.bannedAccountName);
 							}
 						}
 						
@@ -730,7 +728,6 @@ class PlayerEventHandler implements Listener
 		{
 			GriefPrevention.sendMessage(player, TextMode.Err, Messages.BesiegedNoTeleport);
 			event.setCancelled(true);
-			return;
 		}
 	}
 	
@@ -953,16 +950,15 @@ class PlayerEventHandler implements Listener
 			if(bucketEvent.getBucket() == Material.LAVA_BUCKET)
 			{
 				List<Player> players = block.getWorld().getPlayers();
-				for(int i = 0; i < players.size(); i++)
+				for (Player otherPlayer : players)
 				{
-					Player otherPlayer = players.get(i);
 					Location location = otherPlayer.getLocation();
-					if(!otherPlayer.equals(player) && block.getY() >= location.getBlockY() - 1 && location.distanceSquared(block.getLocation()) < minLavaDistance * minLavaDistance)
+					if (!otherPlayer.equals(player) && block.getY() >= location.getBlockY() - 1 && location.distanceSquared(block.getLocation()) < minLavaDistance * minLavaDistance)
 					{
 						GriefPrevention.sendMessage(player, TextMode.Err, Messages.NoLavaNearOtherPlayer, otherPlayer.getName());
 						bucketEvent.setCancelled(true);
 						return;
-					}					
+					}
 				}
 			}
 		}
@@ -981,7 +977,6 @@ class PlayerEventHandler implements Listener
 		{
 			GriefPrevention.sendMessage(player, TextMode.Err, noBuildReason);
 			bucketEvent.setCancelled(true);
-			return;
 		}
 	}
 	
@@ -1001,9 +996,9 @@ class PlayerEventHandler implements Listener
 			{
 				//try to find a far away non-air block along line of sight
 				HashSet<Byte> transparentMaterials = new HashSet<Byte>();
-				transparentMaterials.add(Byte.valueOf((byte)Material.AIR.getId()));
-				transparentMaterials.add(Byte.valueOf((byte)Material.SNOW.getId()));
-				transparentMaterials.add(Byte.valueOf((byte)Material.LONG_GRASS.getId()));
+				transparentMaterials.add((byte) Material.AIR.getId());
+				transparentMaterials.add((byte) Material.SNOW.getId());
+				transparentMaterials.add((byte) Material.LONG_GRASS.getId());
 				clickedBlock = player.getTargetBlock(transparentMaterials, 250);
 			}			
 		}
@@ -1108,7 +1103,6 @@ class PlayerEventHandler implements Listener
 				{
 					event.setCancelled(true);
 					GriefPrevention.sendMessage(player, TextMode.Err, noAccessReason);
-					return;
 				}
 			}	
 		}
@@ -1126,7 +1120,6 @@ class PlayerEventHandler implements Listener
 				{
 					event.setCancelled(true);
 					GriefPrevention.sendMessage(player, TextMode.Err, noAccessReason);
-					return;
 				}
 			}			
 		}
@@ -1136,7 +1129,6 @@ class PlayerEventHandler implements Listener
 		else if(event.getAction() == Action.PHYSICAL && clickedBlockType == Material.SOIL)
 		{
 			event.setCancelled(true);
-			return;
 		}
 		
 		//apply rule for note blocks and repeaters
@@ -1150,7 +1142,6 @@ class PlayerEventHandler implements Listener
 				{
 					event.setCancelled(true);
 					GriefPrevention.sendMessage(player, TextMode.Err, noBuildReason);
-					return;
 				}
 			}
 		}
@@ -1254,7 +1245,7 @@ class PlayerEventHandler implements Listener
 					//if can resize this claim, tell about the boundaries
 					if(claim.allowEdit(player) == null)
 					{
-						GriefPrevention.sendMessage(player, TextMode.Info, "  " + claim.getWidth() + "x" + claim.getHeight() + "=" + claim.getArea());
+						GriefPrevention.sendMessage(player, TextMode.Info, "  " + claim.getWidth() + 'x' + claim.getHeight() + '=' + claim.getArea());
 					}
 					
 					//if deleteclaims permission, tell about the player's offline time
@@ -1582,7 +1573,7 @@ class PlayerEventHandler implements Listener
 					//if resizing someone else's claim, make a log entry
 					if(!playerData.claimResizing.ownerName.equals(playerName))
 					{
-						GriefPrevention.AddLogEntry(playerName + " resized " + playerData.claimResizing.getOwnerName() + "'s claim at " + GriefPrevention.getfriendlyLocationString(playerData.claimResizing.lesserBoundaryCorner) + ".");
+						GriefPrevention.AddLogEntry(playerName + " resized " + playerData.claimResizing.getOwnerName() + "'s claim at " + GriefPrevention.getfriendlyLocationString(playerData.claimResizing.lesserBoundaryCorner) + '.');
 					}
 					
 					//if in a creative mode world and shrinking an existing claim, restore any unclaimed area
@@ -1793,11 +1784,9 @@ class PlayerEventHandler implements Listener
 					
 					Visualization visualization = Visualization.FromClaim(result.claim, clickedBlock.getY(), VisualizationType.ErrorClaim, player.getLocation());
 					Visualization.Apply(player, visualization);
-					
-					return;
+
 				}else if(result.succeeded == CreateClaimResult.Result.Canceled) {
 					//A plugin canceled the event.
-					return;
 				}
 				
 				//otherwise, advise him on the /trust command and show him his new claim

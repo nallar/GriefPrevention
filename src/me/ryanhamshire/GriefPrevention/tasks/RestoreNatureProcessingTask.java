@@ -35,23 +35,23 @@ public class RestoreNatureProcessingTask implements Runnable
 {
 	//world information captured from the main thread
 	//will be updated and sent back to main thread to be applied to the world
-	private BlockSnapshot[][][] snapshots;
+	private final BlockSnapshot[][][] snapshots;
 	
 	//other information collected from the main thread.
 	//not to be updated, only to be passed back to main thread to provide some context about the operation
 	private int miny;
-	private Environment environment;
-	private Location lesserBoundaryCorner;
-	private Location greaterBoundaryCorner;
-	private Player player;			//absolutely must not be accessed.  not thread safe.
-	private Biome biome;
-	private boolean creativeMode;
-	private int seaLevel;
-	private boolean aggressiveMode;
+	private final Environment environment;
+	private final Location lesserBoundaryCorner;
+	private final Location greaterBoundaryCorner;
+	private final Player player;			//absolutely must not be accessed.  not thread safe.
+	private final Biome biome;
+	private final boolean creativeMode;
+	private final int seaLevel;
+	private final boolean aggressiveMode;
 	
 	//two lists of materials
-	private ArrayList<Integer> notAllowedToHang;    //natural blocks which don't naturally hang in their air
-	private ArrayList<Integer> playerBlocks;		//a "complete" list of player-placed blocks.  MUST BE MAINTAINED as patches introduce more
+	private final ArrayList<Integer> notAllowedToHang;    //natural blocks which don't naturally hang in their air
+	private final ArrayList<Integer> playerBlocks;		//a "complete" list of player-placed blocks.  MUST BE MAINTAINED as patches introduce more
 	
 	public RestoreNatureProcessingTask(BlockSnapshot[][][] snapshots, int miny, Environment environment, Biome biome, Location lesserBoundaryCorner, Location greaterBoundaryCorner, int seaLevel, boolean aggressiveMode, boolean creativeMode, Player player)
 	{
@@ -391,7 +391,7 @@ public class RestoreNatureProcessingTask implements Runnable
 		};
 		
 		ArrayList<Integer> excludedBlocks = new ArrayList<Integer>();
-		for(int i = 0; i < excludedBlocksArray.length; i++) excludedBlocks.add(excludedBlocksArray[i]);
+		for (int anExcludedBlocksArray : excludedBlocksArray) excludedBlocks.add(anExcludedBlocksArray);
 		
 		boolean changed;
 		do

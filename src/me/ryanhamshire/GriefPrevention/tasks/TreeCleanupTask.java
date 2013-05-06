@@ -34,10 +34,10 @@ import org.bukkit.block.BlockFace;
 //if any part of the tree is still there and nothing else has been built in its place, remove the remaining parts
 public class TreeCleanupTask implements Runnable 
 {
-	private Block originalChoppedBlock;          //first block chopped in the tree
-	private Block originalRootBlock;             //where the root of the tree used to be
-	private byte originalRootBlockData;			 //data value of that root block (TYPE of log)
-	private ArrayList<Block> originalTreeBlocks; //a list of other log blocks determined to be part of this tree
+	private final Block originalChoppedBlock;          //first block chopped in the tree
+	private final Block originalRootBlock;             //where the root of the tree used to be
+	private final byte originalRootBlockData;			 //data value of that root block (TYPE of log)
+	private final ArrayList<Block> originalTreeBlocks; //a list of other log blocks determined to be part of this tree
 	
 	public TreeCleanupTask(Block originalChoppedBlock, Block originalRootBlock, ArrayList<Block> originalTreeBlocks, byte originalRootBlockData)
 	{
@@ -64,13 +64,13 @@ public class TreeCleanupTask implements Runnable
 		if(this.originalChoppedBlock.getWorld().getBlockAt(this.originalChoppedBlock.getLocation()).getType() != Material.AIR) return;
 		
 		//scan the original tree block locations to see if any of them have been replaced		
-		for(int i = 0; i < this.originalTreeBlocks.size(); i++)
+		for (Block originalTreeBlock1 : this.originalTreeBlocks)
 		{
-			Location location = this.originalTreeBlocks.get(i).getLocation();
+			Location location = originalTreeBlock1.getLocation();
 			Block currentBlock = location.getBlock();
-			
+
 			//if the block has been replaced, stop here, we won't do any cleanup
-			if(currentBlock.getType() != Material.LOG && currentBlock.getType() != Material.AIR)
+			if (currentBlock.getType() != Material.LOG && currentBlock.getType() != Material.AIR)
 			{
 				return;
 			}
@@ -78,11 +78,11 @@ public class TreeCleanupTask implements Runnable
 		
 		//otherwise scan again, this time removing any remaining log blocks
 		boolean logsRemaining = false;
-		for(int i = 0; i < this.originalTreeBlocks.size(); i++)
+		for (Block originalTreeBlock : this.originalTreeBlocks)
 		{
-			Location location = this.originalTreeBlocks.get(i).getLocation();
+			Location location = originalTreeBlock.getLocation();
 			Block currentBlock = location.getBlock();
-			if(currentBlock.getType() == Material.LOG)
+			if (currentBlock.getType() == Material.LOG)
 			{
 				logsRemaining = true;
 				currentBlock.setType(Material.AIR);

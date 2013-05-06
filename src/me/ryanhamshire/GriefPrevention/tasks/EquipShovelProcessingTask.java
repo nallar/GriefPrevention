@@ -32,7 +32,7 @@ import org.bukkit.entity.Player;
 public class EquipShovelProcessingTask implements Runnable 
 {
 	//player data
-	private Player player;
+	private final Player player;
 	
 	public EquipShovelProcessingTask(Player player)
 	{

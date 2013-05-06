@@ -30,7 +30,7 @@ import org.bukkit.entity.Player;
 //for example, defender escaped or attacker gave up and left
 public class SiegeCheckupTask implements Runnable 
 {
-	private SiegeData siegeData;
+	private final SiegeData siegeData;
 	
 	public SiegeCheckupTask(SiegeData siegeData)
 	{

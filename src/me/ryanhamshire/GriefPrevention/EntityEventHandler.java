@@ -60,7 +60,7 @@ import org.bukkit.event.vehicle.VehicleDamageEvent;
 class EntityEventHandler implements Listener
 {
 	//convenience reference for the singleton datastore
-	private DataStore dataStore;
+	private final DataStore dataStore;
 	
 	public EntityEventHandler(DataStore dataStore)
 	{
@@ -208,7 +208,6 @@ class EntityEventHandler implements Listener
 		if(claim == null || claim.allowMoreEntities() != null)
 		{
 			event.setCancelled(true);
-			return;
 		}
 	}
 	
@@ -309,8 +308,7 @@ class EntityEventHandler implements Listener
         {
         	event.setCancelled(true);
         	GriefPrevention.sendMessage(event.getPlayer(), TextMode.Err, noBuildReason);
-			return;
-        }
+		}
 		
 		//otherwise, apply entity-count limitations for creative worlds
 		else if(GriefPrevention.instance.creativeRulesApply(event.getEntity().getLocation()))
@@ -324,7 +322,6 @@ class EntityEventHandler implements Listener
 			{
 				GriefPrevention.sendMessage(event.getPlayer(), TextMode.Err, noEntitiesReason);
 				event.setCancelled(true);
-				return;
 			}
 		}
 	}
@@ -464,7 +461,6 @@ class EntityEventHandler implements Listener
 						//exception case
 						if(event.getEntity() instanceof Villager && damageSource instanceof Monster && claim.isAdminClaim())
 						{
-							return;
 						}
 						
 						//all other cases

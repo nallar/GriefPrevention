@@ -40,15 +40,15 @@ class RestoreNatureExecutionTask implements Runnable
 {
 	//results from processing thread
 	//will be applied to the world
-	private BlockSnapshot[][][] snapshots;
+	private final BlockSnapshot[][][] snapshots;
 	
 	//boundaries for changes
-	private int miny;
-	private Location lesserCorner;
-	private Location greaterCorner;
+	private final int miny;
+	private final Location lesserCorner;
+	private final Location greaterCorner;
 	
 	//player who should be notified about the result (will see a visualization when the restoration is complete)
-	private Player player;
+	private final Player player;
 
 	public RestoreNatureExecutionTask(BlockSnapshot[][][] snapshots, int miny, Location lesserCorner, Location greaterCorner, Player player)
 	{
@@ -93,19 +93,18 @@ class RestoreNatureExecutionTask implements Runnable
 		//clean up any entities in the chunk, ensure no players are suffocated
 		Chunk chunk = this.lesserCorner.getChunk();
 		Entity [] entities = chunk.getEntities();
-		for(int i = 0; i < entities.length; i++)
+		for (Entity entity : entities)
 		{
-			Entity entity = entities[i];
-			if(!(entity instanceof Player || entity instanceof Animals))
+			if (!(entity instanceof Player || entity instanceof Animals))
 			{
 				//hanging entities (paintings, item frames) are protected when they're in land claims
-				if(!(entity instanceof Hanging) || GriefPrevention.instance.dataStore.getClaimAt(entity.getLocation(), false, null) == null)
+				if (!(entity instanceof Hanging) || GriefPrevention.instance.dataStore.getClaimAt(entity.getLocation(), false, null) == null)
 				{
 					//everything else is removed
 					entity.remove();
-				}				
+				}
 			}
-			
+
 			//for players, always ensure there's air where the player is standing
 			else
 			{

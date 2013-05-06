@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ClaimArray {
 	
-	private ArrayList<Claim> claims = new ArrayList<Claim>();
+	private final ArrayList<Claim> claims = new ArrayList<Claim>();
 	ConcurrentHashMap<Long, Claim> claimmap = new ConcurrentHashMap<Long, Claim>();
 	
 	ConcurrentHashMap<String, ArrayList<Claim>> chunkmap = new ConcurrentHashMap<String, ArrayList<Claim>>();
@@ -81,7 +81,7 @@ public class ClaimArray {
 			for(int tz = lz; (tz >> 4) <= (gz >> 4); tz += 16) {
 				int chunkX = tx >> 4;
 			    int chunkZ = tz >> 4;
-			    chunks.add(world + ";" + chunkX + "," + chunkZ);
+			    chunks.add(world + ';' + chunkX + ',' + chunkZ);
 			}
 		}
 		return chunks;

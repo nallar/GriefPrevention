@@ -54,9 +54,9 @@ public abstract class DataStore
 	Long nextClaimID = (long)0;
 	
 	//path information, for where stuff stored on disk is well...  stored
-	protected final static String dataLayerFolderPath = "plugins" + File.separator + "GriefPreventionData";
-	final static String configFilePath = dataLayerFolderPath + File.separator + "config.yml";
-	final static String messagesFilePath = dataLayerFolderPath + File.separator + "messages.yml";
+	protected static final String dataLayerFolderPath = "plugins" + File.separator + "GriefPreventionData";
+	static final String configFilePath = dataLayerFolderPath + File.separator + "config.yml";
+	static final String messagesFilePath = dataLayerFolderPath + File.separator + "messages.yml";
 	
 	//initialization!
 	void initialize() throws Exception
@@ -103,12 +103,10 @@ public abstract class DataStore
 	{
 		int bonusBlocks = 0;
 		Set<String> keys = permissionToBonusBlocksMap.keySet();
-		Iterator<String> iterator = keys.iterator();
-		while(iterator.hasNext())
+		for (String groupName : keys)
 		{
-			String groupName = iterator.next();
 			Player player = GriefPrevention.instance.getServer().getPlayer(playerName);
-			if(player != null && player.hasPermission(groupName))
+			if (player != null && player.hasPermission(groupName))
 			{
 				bonusBlocks += this.permissionToBonusBlocksMap.get(groupName);
 			}
@@ -123,7 +121,7 @@ public abstract class DataStore
 	 * @param amount
 	 * @return
 	 */
-	synchronized public int adjustGroupBonusBlocks(String groupName, int amount)
+	public synchronized int adjustGroupBonusBlocks(String groupName, int amount)
 	{
 		Integer currentValue = this.permissionToBonusBlocksMap.get(groupName);
 		if(currentValue == null) currentValue = 0;
@@ -145,7 +143,7 @@ public abstract class DataStore
 	 * @param newOwnerName
 	 * @throws Exception
 	 */
-	synchronized public void changeClaimOwner(Claim claim, String newOwnerName) throws Exception
+	public synchronized void changeClaimOwner(Claim claim, String newOwnerName) throws Exception
 	{
 		//if it's a subdivision, throw an exception
 		if(claim.parent != null)
@@ -261,7 +259,7 @@ public abstract class DataStore
 		World world = GriefPrevention.instance.getServer().getWorld(worldName);
 		if(world == null)
 		{
-			throw new WorldNotFoundException("World not found: \"" + worldName + "\"");
+			throw new WorldNotFoundException("World not found: \"" + worldName + '"');
 		}
 		
 		//convert those numerical strings to integer values
@@ -276,7 +274,7 @@ public abstract class DataStore
 	 * Saves any changes to a claim to secondary storage.
 	 * @param claim
 	 */
-	synchronized public void saveClaim(Claim claim)
+	public synchronized void saveClaim(Claim claim)
 	{
 		//subdivisions don't save to their own files, but instead live in their parent claim's file
 		//so any attempt to save a subdivision will save its parent (and thus the subdivision)
@@ -307,7 +305,7 @@ public abstract class DataStore
 	 * @param playerName
 	 * @return
 	 */
-	synchronized public PlayerData getPlayerData(String playerName)
+	public synchronized PlayerData getPlayerData(String playerName)
 	{
 		//first, look in memory
 		PlayerData playerData = this.playerNameToPlayerDataMap.get(playerName);
@@ -342,12 +340,12 @@ public abstract class DataStore
 	 * Deletes a claim or subdivision
 	 * @param claim
 	 */
-	synchronized public void deleteClaim(Claim claim) {
+	public synchronized void deleteClaim(Claim claim) {
 		deleteClaim(claim, true);
 	}
 	
 	//deletes a claim or subdivision
-	synchronized private void deleteClaim(Claim claim, boolean sendevent)
+	private synchronized void deleteClaim(Claim claim, boolean sendevent)
 	{
 		//subdivisions are simple - just remove them from their parent claim and save that claim
 		if(claim.parent != null)
@@ -394,7 +392,7 @@ public abstract class DataStore
 	 * @param cachedClaim can be NULL, but will help performance if you have a reasonable guess about which claim the location is in
 	 * @return
 	 */
-	synchronized public Claim getClaimAt(Location location, boolean ignoreHeight, Claim cachedClaim)
+	public synchronized Claim getClaimAt(Location location, boolean ignoreHeight, Claim cachedClaim)
 	{
 		//check cachedClaim guess first.  if it's in the datastore and the location is inside it, we're done
 		if(cachedClaim != null && cachedClaim.inDataStore && cachedClaim.contains(location, ignoreHeight, true)) return cachedClaim;
@@ -413,25 +411,23 @@ public abstract class DataStore
 		}
 		
 		//otherwise, search all existing claims in the chunk until we find the right claim
-		for(int i = 0; i < aclaims.size(); i++)
+		for (Claim claim : aclaims)
 		{
-			Claim claim = aclaims.get(i);
-			
 			//if we reach a claim which is greater than the temp claim created above, there's definitely no claim
 			//in the collection which includes our location
-			if(claim.greaterThan(tempClaim)) return null;
-			
+			if (claim.greaterThan(tempClaim)) return null;
+
 			//find a top level claim
-			if(claim.contains(location, ignoreHeight, false))
+			if (claim.contains(location, ignoreHeight, false))
 			{
 				//when we find a top level claim, if the location is in one of its subdivisions,
 				//return the SUBDIVISION, not the top level claim
-				for(int j = 0; j < claim.children.size(); j++)
+				for (int j = 0; j < claim.children.size(); j++)
 				{
 					Claim subdivision = claim.children.get(j);
-					if(subdivision.contains(location, ignoreHeight, false)) return subdivision;
-				}						
-					
+					if (subdivision.contains(location, ignoreHeight, false)) return subdivision;
+				}
+
 				return claim;
 			}
 		}
@@ -445,7 +441,7 @@ public abstract class DataStore
 	 * @param i The ID of the claim.
 	 * @return null if there is no claim by that ID, otherwise, the claim.
 	 */
-	synchronized public Claim getClaim(long i) {
+	public synchronized Claim getClaim(long i) {
 		return claims.getID(i);
 	}
 	
@@ -454,7 +450,7 @@ public abstract class DataStore
 	 * and it should only be used to read claim data.
 	 * @return The Claim Array.
 	 */
-	synchronized public ClaimArray getClaimArray() {
+	public synchronized ClaimArray getClaimArray() {
 		return claims;
 	}
 	
@@ -481,12 +477,12 @@ public abstract class DataStore
 	 * @param neverdelete Should this claim be locked against accidental deletion?
 	 * @return
 	 */
-	synchronized public CreateClaimResult createClaim(World world, int x1, int x2, int y1, int y2, int z1, int z2, String ownerName, Claim parent, Long id, boolean neverdelete) {
+	public synchronized CreateClaimResult createClaim(World world, int x1, int x2, int y1, int y2, int z1, int z2, String ownerName, Claim parent, Long id, boolean neverdelete) {
 		return createClaim(world, x1, x2, y1, y2, z1, z2, ownerName, parent, id, false, null);
 	}
 	
 	@Deprecated
-	synchronized public CreateClaimResult createClaim(World world, int x1, int x2, int y1, int y2, int z1, int z2, String ownerName, Claim parent, Long id) {
+	public synchronized CreateClaimResult createClaim(World world, int x1, int x2, int y1, int y2, int z1, int z2, String ownerName, Claim parent, Long id) {
 		return createClaim(world, x1, x2, y1, y2, z1, z2, ownerName, parent, id, false);
 	}
 	
@@ -499,7 +495,7 @@ public abstract class DataStore
 	//does NOT check a player has permission to create a claim, or enough claim blocks.
 	//does NOT check minimum claim size constraints
 	//does NOT visualize the new claim for any players	
-	synchronized private CreateClaimResult createClaim(World world, int x1, int x2, int y1, int y2, int z1, int z2, String ownerName, Claim parent, Long id, boolean neverdelete, Claim oldclaim)
+	private synchronized CreateClaimResult createClaim(World world, int x1, int x2, int y1, int y2, int z1, int z2, String ownerName, Claim parent, Long id, boolean neverdelete, Claim oldclaim)
 	{
 		CreateClaimResult result = new CreateClaimResult();
 		
@@ -581,12 +577,10 @@ public abstract class DataStore
 			}
 		}
 
-		for(int i = 0; i < claimsToCheck.size(); i++)
+		for (Claim otherClaim : claimsToCheck)
 		{
-			Claim otherClaim = claimsToCheck.get(i);
-			
 			//if we find an existing claim which will be overlapped
-			if(otherClaim.overlaps(newClaim))
+			if (otherClaim.overlaps(newClaim))
 			{
 				//result = fail, return conflicting claim
 				result.succeeded = CreateClaimResult.Result.ClaimOverlap;
@@ -631,7 +625,7 @@ public abstract class DataStore
 	 * @param claim The claim to act on.
 	 * @param newDepth The new depth to extend it to.
 	 */
-	synchronized public void extendClaim(Claim claim, int newDepth) 
+	public synchronized void extendClaim(Claim claim, int newDepth)
 	{
 		if(newDepth < GriefPrevention.instance.config_claims_maxDepth) newDepth = GriefPrevention.instance.config_claims_maxDepth;
 		
@@ -663,7 +657,7 @@ public abstract class DataStore
 	 * @param defenderClaim The claim being attacked
 	 * @see #onCooldown()
 	 */
-	synchronized public void startSiege(Player attacker, Player defender, Claim defenderClaim)
+	public synchronized void startSiege(Player attacker, Player defender, Claim defenderClaim)
 	{
 		//fill-in the necessary SiegeData instance
 		SiegeData siegeData = new SiegeData(attacker, defender, defenderClaim);
@@ -687,7 +681,7 @@ public abstract class DataStore
 	 * @param loserName The loser's name
 	 * @param death Was the siege ended by a player's death?
 	 */
-	synchronized public void endSiege(SiegeData siegeData, String winnerName, String loserName, boolean death)
+	public synchronized void endSiege(SiegeData siegeData, String winnerName, String loserName, boolean death)
 	{
 		boolean grantAccess = false;
 		
@@ -730,14 +724,14 @@ public abstract class DataStore
 		//start a cooldown for this attacker/defender pair
 		Long now = Calendar.getInstance().getTimeInMillis();
 		Long cooldownEnd = now + 1000 * 60 * 60;  //one hour from now
-		this.siegeCooldownRemaining.put(siegeData.attacker.getName() + "_" + siegeData.defender.getName(), cooldownEnd);
+		this.siegeCooldownRemaining.put(siegeData.attacker.getName() + '_' + siegeData.defender.getName(), cooldownEnd);
 		
 		//start cooldowns for every attacker/involved claim pair
 		for(int i = 0; i < siegeData.claims.size(); i++)
 		{
 			Claim claim = siegeData.claims.get(i);
 			claim.siegeData = null;
-			this.siegeCooldownRemaining.put(siegeData.attacker.getName() + "_" + claim.ownerName, cooldownEnd);
+			this.siegeCooldownRemaining.put(siegeData.attacker.getName() + '_' + claim.ownerName, cooldownEnd);
 			
 			//if doors should be opened for looting, do that now
 			if(grantAccess)
@@ -782,18 +776,19 @@ public abstract class DataStore
 				loser.getInventory().clear();
 				
 				//try to add it to the winner's inventory
-				for(int j = 0; j < loserItems.length; j++)
+				for (ItemStack loserItem : loserItems)
 				{
-					if(loserItems[j] == null || loserItems[j].getType() == Material.AIR || loserItems[j].getAmount() == 0) continue;
-					
-					HashMap<Integer, ItemStack> wontFitItems = winner.getInventory().addItem(loserItems[j]);
-					
+					if (loserItem == null || loserItem.getType() == Material.AIR || loserItem.getAmount() == 0)
+						continue;
+
+					HashMap<Integer, ItemStack> wontFitItems = winner.getInventory().addItem(loserItem);
+
 					//drop any remainder on the ground at his feet
-					Object [] keys = wontFitItems.keySet().toArray();
-					Location winnerLocation = winner.getLocation(); 
-					for(int i = 0; i < keys.length; i++)
+					Object[] keys = wontFitItems.keySet().toArray();
+					Location winnerLocation = winner.getLocation();
+					for (Object key1 : keys)
 					{
-						Integer key = (Integer)keys[i];
+						Integer key = (Integer) key1;
 						winnerLocation.getWorld().dropItemNaturally(winnerLocation, wontFitItems.get(key));
 					}
 				}
@@ -811,14 +806,14 @@ public abstract class DataStore
 	 * @param defenderClaim The defender's claim
 	 * @return
 	 */
-	synchronized public boolean onCooldown(Player attacker, Player defender, Claim defenderClaim)
+	public synchronized boolean onCooldown(Player attacker, Player defender, Claim defenderClaim)
 	{
 		Long cooldownEnd = null;
 		
 		//look for an attacker/defender cooldown
-		if(this.siegeCooldownRemaining.get(attacker.getName() + "_" + defender.getName()) != null)
+		if(this.siegeCooldownRemaining.get(attacker.getName() + '_' + defender.getName()) != null)
 		{
-			cooldownEnd = this.siegeCooldownRemaining.get(attacker.getName() + "_" + defender.getName());
+			cooldownEnd = this.siegeCooldownRemaining.get(attacker.getName() + '_' + defender.getName());
 			
 			if(Calendar.getInstance().getTimeInMillis() < cooldownEnd)
 			{
@@ -826,13 +821,13 @@ public abstract class DataStore
 			}
 			
 			//if found but expired, remove it
-			this.siegeCooldownRemaining.remove(attacker.getName() + "_" + defender.getName());
+			this.siegeCooldownRemaining.remove(attacker.getName() + '_' + defender.getName());
 		}
 		
 		//look for an attacker/claim cooldown
-		if(cooldownEnd == null && this.siegeCooldownRemaining.get(attacker.getName() + "_" + defenderClaim.ownerName) != null)
+		if(cooldownEnd == null && this.siegeCooldownRemaining.get(attacker.getName() + '_' + defenderClaim.ownerName) != null)
 		{
-			cooldownEnd = this.siegeCooldownRemaining.get(attacker.getName() + "_" + defenderClaim.ownerName);
+			cooldownEnd = this.siegeCooldownRemaining.get(attacker.getName() + '_' + defenderClaim.ownerName);
 			
 			if(Calendar.getInstance().getTimeInMillis() < cooldownEnd)
 			{
@@ -840,7 +835,7 @@ public abstract class DataStore
 			}
 			
 			//if found but expired, remove it
-			this.siegeCooldownRemaining.remove(attacker.getName() + "_" + defenderClaim.ownerName);			
+			this.siegeCooldownRemaining.remove(attacker.getName() + '_' + defenderClaim.ownerName);
 		}
 		
 		return false;
@@ -874,7 +869,7 @@ public abstract class DataStore
 	
 	//deletes all claims owned by a player with the exception of locked claims
 	@Deprecated
-	synchronized public void deleteClaimsForPlayer(String playerName, boolean deleteCreativeClaims) {
+	public synchronized void deleteClaimsForPlayer(String playerName, boolean deleteCreativeClaims) {
 		deleteClaimsForPlayer(playerName, deleteCreativeClaims, false);
 	}
 	
@@ -884,7 +879,7 @@ public abstract class DataStore
 	 * @param deleteCreativeClaims Delete all the player's creative claims?
 	 * @param deleteLockedClaims Should we delete claims that have been locked to not delete?
 	 */
-	synchronized public void deleteClaimsForPlayer(String playerName, boolean deleteCreativeClaims, boolean deleteLockedClaims)
+	public synchronized void deleteClaimsForPlayer(String playerName, boolean deleteCreativeClaims, boolean deleteLockedClaims)
 	{
 		//make a list of the player's claims
 		ArrayList<Claim> claimsToDelete = new ArrayList<Claim>();
@@ -899,15 +894,14 @@ public abstract class DataStore
 		}
 		
 		//delete them one by one
-		for(int i = 0; i < claimsToDelete.size(); i++)
+		for (Claim claim : claimsToDelete)
 		{
-			Claim claim = claimsToDelete.get(i); 
 			claim.removeSurfaceFluids(null);
-			
+
 			this.deleteClaim(claim);
-			
+
 			//if in a creative mode world, delete the claim
-			if(GriefPrevention.instance.creativeRulesApply(claim.getLesserBoundaryCorner()))
+			if (GriefPrevention.instance.creativeRulesApply(claim.getLesserBoundaryCorner()))
 			{
 				GriefPrevention.instance.restoreClaim(claim, 0);
 			}
@@ -925,7 +919,7 @@ public abstract class DataStore
 	 * @param newz2 corner 2 z
 	 * @return
 	 */
-	synchronized public CreateClaimResult resizeClaim(Claim claim, int newx1, int newx2, int newy1, int newy2, int newz1, int newz2)
+	public synchronized CreateClaimResult resizeClaim(Claim claim, int newx1, int newx2, int newy1, int newy2, int newz1, int newz2)
 	{
 		//remove old claim
 		this.deleteClaim(claim);					
@@ -942,19 +936,16 @@ public abstract class DataStore
 			ArrayList<String> accessors = new ArrayList<String>();
 			ArrayList<String> managers = new ArrayList<String>();
 			claim.getPermissions(builders, containers, accessors, managers);
-			
-			for(int i = 0; i < builders.size(); i++)
-				result.claim.setPermission(builders.get(i), ClaimPermission.Build);
-			
-			for(int i = 0; i < containers.size(); i++)
-				result.claim.setPermission(containers.get(i), ClaimPermission.Inventory);
-			
-			for(int i = 0; i < accessors.size(); i++)
-				result.claim.setPermission(accessors.get(i), ClaimPermission.Access);
-			
-			for(int i = 0; i < managers.size(); i++)
+
+			for (String builder : builders) result.claim.setPermission(builder, ClaimPermission.Build);
+
+			for (String container : containers) result.claim.setPermission(container, ClaimPermission.Inventory);
+
+			for (String accessor : accessors) result.claim.setPermission(accessor, ClaimPermission.Access);
+
+			for (String manager : managers)
 			{
-				result.claim.addManager(managers.get(i));
+				result.claim.addManager(manager);
 				//result.claim.managers.add(managers.get(i));
 			}
 			
@@ -1166,24 +1157,23 @@ public abstract class DataStore
 		FileConfiguration config = YamlConfiguration.loadConfiguration(new File(messagesFilePath));
 		
 		//for each message ID
-		for(int i = 0; i < messageIDs.length; i++)
+		for (Messages messageID : messageIDs)
 		{
 			//get default for this message
-			Messages messageID = messageIDs[i];
 			CustomizableMessage messageData = defaults.get(messageID.name());
-			
+
 			//if default is missing, log an error and use some fake data for now so that the plugin can run
-			if(messageData == null)
+			if (messageData == null)
 			{
 				GriefPrevention.AddLogEntry("Missing message for " + messageID.name() + ".  Please contact the developer.");
 				messageData = new CustomizableMessage(messageID, "Missing message!  ID: " + messageID.name() + ".  Please contact a server admin.", null);
 			}
-			
+
 			//read the message from the file, use default if necessary
 			this.messages[messageID.ordinal()] = config.getString("Messages." + messageID.name() + ".Text", messageData.text);
 			config.set("Messages." + messageID.name() + ".Text", this.messages[messageID.ordinal()]);
-			
-			if(messageData.notes != null)
+
+			if (messageData.notes != null)
 			{
 				messageData.notes = config.getString("Messages." + messageID.name() + ".Notes", messageData.notes);
 				config.set("Messages." + messageID.name() + ".Notes", messageData.notes);
@@ -1197,7 +1187,7 @@ public abstract class DataStore
 		}
 		catch(IOException exception)
 		{
-			GriefPrevention.AddLogEntry("Unable to write to the configuration file at \"" + DataStore.messagesFilePath + "\"");
+			GriefPrevention.AddLogEntry("Unable to write to the configuration file at \"" + DataStore.messagesFilePath + '"');
 		}
 		
 		defaults.clear();
@@ -1211,20 +1201,20 @@ public abstract class DataStore
 		defaults.put(id.name(), message);		
 	}
 
-	synchronized public String getMessage(Messages messageID, String... args)
+	public synchronized String getMessage(Messages messageID, String... args)
 	{
 		String message = messages[messageID.ordinal()];
 		
 		for(int i = 0; i < args.length; i++)
 		{
 			String param = args[i];
-			message = message.replace("{" + i + "}", param);
+			message = message.replace("{" + i + '}', param);
 		}
 		
 		return message;		
 	}
 	
-	synchronized public Long[] getClaimIds() {
+	public synchronized Long[] getClaimIds() {
 		return claims.claimmap.keySet().toArray(new Long[claims.claimmap.size()]);
 	}
 	
@@ -1237,6 +1227,6 @@ public abstract class DataStore
 	private String getChunk(Location loc) {
 		int chunkX = loc.getBlockX() >> 4;
 		int chunkZ = loc.getBlockZ() >> 4;
-		return loc.getWorld().getName() + ";" + chunkX + "," + chunkZ;
+		return loc.getWorld().getName() + ';' + chunkX + ',' + chunkZ;
 	}
 }

@@ -64,9 +64,9 @@ import org.bukkit.util.Vector;
 public class BlockEventHandler implements Listener 
 {
 	//convenience reference to singleton datastore
-	private DataStore dataStore;
+	private final DataStore dataStore;
 	
-	private ArrayList<Material> trashBlocks;
+	private final ArrayList<Material> trashBlocks;
 	
 	//constructor
 	public BlockEventHandler(DataStore dataStore)
@@ -220,7 +220,7 @@ public class BlockEventHandler implements Listener
 		for(int i = 0; i < event.getLines().length; i++)
 		{
 			if(event.getLine(i).length() != 0) notEmpty = true;
-			lines.append(event.getLine(i) + ";");
+			lines.append(event.getLine(i)).append(';');
 		}
 		
 		String signMessage = lines.toString();
@@ -229,16 +229,15 @@ public class BlockEventHandler implements Listener
 		PlayerData playerData = this.dataStore.getPlayerData(player.getName());
 		if(notEmpty && playerData.lastMessage != null && !playerData.lastMessage.equals(signMessage))
 		{		
-			GriefPrevention.AddLogEntry("[Sign Placement] <" + player.getName() + "> " + lines.toString() + " @ " + GriefPrevention.getfriendlyLocationString(event.getBlock().getLocation()));
+			GriefPrevention.AddLogEntry("[Sign Placement] <" + player.getName() + "> " + lines + " @ " + GriefPrevention.getfriendlyLocationString(event.getBlock().getLocation()));
 			playerData.lastMessage = signMessage;
 			
 			if(!player.hasPermission("griefprevention.eavesdrop") && GriefPrevention.instance.config_sign_Eavesdrop)
 			{
 				Player [] players = GriefPrevention.instance.getServer().getOnlinePlayers();
-				for(int i = 0; i < players.length; i++)
+				for (Player otherPlayer : players)
 				{
-					Player otherPlayer = players[i];
-					if(otherPlayer.hasPermission("griefprevention.eavesdrop"))
+					if (otherPlayer.hasPermission("griefprevention.eavesdrop"))
 					{
 						otherPlayer.sendMessage(ChatColor.GRAY + player.getName() + "(sign): " + signMessage);
 					}
@@ -260,16 +259,15 @@ public class BlockEventHandler implements Listener
 		if(block.getType() == Material.FIRE && !GriefPrevention.instance.config_pvp_enabledWorlds.contains(block.getWorld()) && !player.hasPermission("griefprevention.lava"))
 		{
 			List<Player> players = block.getWorld().getPlayers();
-			for(int i = 0; i < players.size(); i++)
+			for (Player otherPlayer : players)
 			{
-				Player otherPlayer = players.get(i);
 				Location location = otherPlayer.getLocation();
-				if(!otherPlayer.equals(player) && location.distanceSquared(block.getLocation()) < 9)
+				if (!otherPlayer.equals(player) && location.distanceSquared(block.getLocation()) < 9)
 				{
 					GriefPrevention.sendMessage(player, TextMode.Err, Messages.PlayerTooCloseForFire, otherPlayer.getName());
 					placeEvent.setCancelled(true);
 					return;
-				}					
+				}
 			}
 		}
 		
@@ -437,12 +435,11 @@ public class BlockEventHandler implements Listener
 		if(claim != null) pistonClaimOwnerName = claim.getOwnerName();
 		
 		//which blocks are being pushed?
-		for(int i = 0; i < blocks.size(); i++)
+		for (Block block : blocks)
 		{
 			//if ANY of the pushed blocks are owned by someone other than the piston owner, cancel the event
-			Block block = blocks.get(i);
 			claim = this.dataStore.getClaimAt(block.getLocation(), false, null);
-			if(claim != null && !claim.getOwnerName().equals(pistonClaimOwnerName))
+			if (claim != null && !claim.getOwnerName().equals(pistonClaimOwnerName))
 			{
 				event.setCancelled(true);
 				event.getBlock().getWorld().createExplosion(event.getBlock().getLocation(), 0);
@@ -479,25 +476,24 @@ public class BlockEventHandler implements Listener
 		//if horizontal movement
 		if(xchange != 0 || zchange != 0)
 		{
-			for(int i = 0; i < blocks.size(); i++)
+			for (Block block : blocks)
 			{
-				Block block = blocks.get(i);
 				Claim originalClaim = this.dataStore.getClaimAt(block.getLocation(), false, null);
 				String originalOwnerName = "";
-				if(originalClaim != null)
+				if (originalClaim != null)
 				{
 					originalOwnerName = originalClaim.getOwnerName();
 				}
-				
+
 				Claim newClaim = this.dataStore.getClaimAt(block.getLocation().add(xchange, 0, zchange), false, null);
 				String newOwnerName = "";
-				if(newClaim != null)
+				if (newClaim != null)
 				{
 					newOwnerName = newClaim.getOwnerName();
 				}
-				
+
 				//if pushing this block will change ownership, cancel the event and take away the piston (for performance reasons)
-				if(!newOwnerName.equals(originalOwnerName))
+				if (!newOwnerName.equals(originalOwnerName))
 				{
 					event.setCancelled(true);
 					event.getBlock().getWorld().createExplosion(event.getBlock().getLocation(), 0);
@@ -505,7 +501,7 @@ public class BlockEventHandler implements Listener
 					event.getBlock().setType(Material.AIR);
 					return;
 				}
-				
+
 			}
 		}
 	}
@@ -598,10 +594,9 @@ public class BlockEventHandler implements Listener
 			};
 			
 			//pro-actively put out any fires adjacent the burning block, to reduce future processing here
-			for(int i = 0; i < adjacentBlocks.length; i++)
+			for (Block adjacentBlock : adjacentBlocks)
 			{
-				Block adjacentBlock = adjacentBlocks[i];
-				if(adjacentBlock.getType() == Material.FIRE && adjacentBlock.getRelative(BlockFace.DOWN).getType() != Material.NETHERRACK)
+				if (adjacentBlock.getType() == Material.FIRE && adjacentBlock.getRelative(BlockFace.DOWN).getType() != Material.NETHERRACK)
 				{
 					adjacentBlock.setType(Material.AIR);
 				}
@@ -652,12 +647,11 @@ public class BlockEventHandler implements Listener
 		if(fromClaim != null && toClaim == null)
 		{
 			spreadEvent.setCancelled(true);
-			return;
 		}
 		
 		//if spreading into a claim
 		else if(toClaim != null)
-		{		
+		{
 			//who owns the spreading block, if anyone?
 			OfflinePlayer fromOwner = null;			
 			if(fromClaim != null)

@@ -120,10 +120,9 @@ public class Claim
 	public boolean canSiege(Player defender)
 	{
 		if(this.isAdminClaim()) return false;
-		
-		if(this.allowAccess(defender) != null) return false;
-		
-		return true;
+
+		return this.allowAccess(defender) == null;
+
 	}
 	
 	/**
@@ -240,37 +239,33 @@ public class Claim
 		this.ownerName = ownerName;
 		
 		//other permissions
-		for(int i = 0; i < builderNames.length; i++)
+		for (String name : builderNames)
 		{
-			String name = builderNames[i];
-			if(name != null && !name.isEmpty())
+			if (name != null && !name.isEmpty())
 			{
 				this.playerNameToClaimPermissionMap.put(name, ClaimPermission.Build);
 			}
 		}
-		
-		for(int i = 0; i < containerNames.length; i++)
+
+		for (String name : containerNames)
 		{
-			String name = containerNames[i];
-			if(name != null && !name.isEmpty())
+			if (name != null && !name.isEmpty())
 			{
 				this.playerNameToClaimPermissionMap.put(name, ClaimPermission.Inventory);
 			}
 		}
-		
-		for(int i = 0; i < accessorNames.length; i++)
+
+		for (String name : accessorNames)
 		{
-			String name = accessorNames[i];
-			if(name != null && !name.isEmpty())
+			if (name != null && !name.isEmpty())
 			{
 				this.playerNameToClaimPermissionMap.put(name, ClaimPermission.Access);
 			}
 		}
-		
-		for(int i = 0; i < managerNames.length; i++)
+
+		for (String name : managerNames)
 		{
-			String name = managerNames[i];
-			if(name != null && !name.isEmpty())
+			if (name != null && !name.isEmpty())
 			{
 				this.managers.add(name);
 			}
@@ -427,22 +422,22 @@ public class Claim
 	{
 		String playerName = player.getName();
 		Set<String> keys = this.playerNameToClaimPermissionMap.keySet();
-		Iterator<String> iterator = keys.iterator();
-		while(iterator.hasNext())
+		for (String identifier : keys)
 		{
-			String identifier = iterator.next();
-			if(playerName.equalsIgnoreCase(identifier) && this.playerNameToClaimPermissionMap.get(identifier) == level) return true;
-			
-			else if(identifier.startsWith("[") && identifier.endsWith("]"))
+			if (playerName.equalsIgnoreCase(identifier) && this.playerNameToClaimPermissionMap.get(identifier) == level)
+				return true;
+
+			else if (identifier.length() > 0 && identifier.charAt(0) == '[' && identifier.length() > 0 && identifier.charAt(identifier.length() - 1) == ']')
 			{
 				//drop the brackets
 				String permissionIdentifier = identifier.substring(1, identifier.length() - 1);
-				
+
 				//defensive coding
-				if(permissionIdentifier == null || permissionIdentifier.isEmpty()) continue;
-				
+				if (permissionIdentifier == null || permissionIdentifier.isEmpty()) continue;
+
 				//check permission
-				if(player.hasPermission(permissionIdentifier) && this.playerNameToClaimPermissionMap.get(identifier) == level) return true;
+				if (player.hasPermission(permissionIdentifier) && this.playerNameToClaimPermissionMap.get(identifier) == level)
+					return true;
 			}
 		}
 		
@@ -592,16 +587,15 @@ public class Claim
 		if(this.allowEdit(player) == null) return null;
 		
 		//anyone who's in the managers (/PermissionTrust) list can do this
-		for(int i = 0; i < this.managers.size(); i++)
+		for (String managerID : this.managers)
 		{
-			String managerID = this.managers.get(i);
-			if(player.getName().equalsIgnoreCase(managerID)) return null;
-			
-			else if(managerID.startsWith("[") && managerID.endsWith("]"))
+			if (player.getName().equalsIgnoreCase(managerID)) return null;
+
+			else if (managerID.length() > 0 && managerID.charAt(0) == '[' && managerID.length() > 0 && managerID.charAt(managerID.length() - 1) == ']')
 			{
 				managerID = managerID.substring(1, managerID.length() - 1);
-				if(managerID == null || managerID.isEmpty()) continue;
-				if(player.hasPermission(managerID)) return null;
+				if (managerID == null || managerID.isEmpty()) continue;
+				if (player.hasPermission(managerID)) return null;
 			}
 		}
 		
@@ -716,30 +710,25 @@ public class Claim
 	public void getPermissions(ArrayList<String> builders, ArrayList<String> containers, ArrayList<String> accessors, ArrayList<String> managers)
 	{
 		//loop through all the entries in the hash map
-		Iterator<Map.Entry<String, ClaimPermission>> mappingsIterator = this.playerNameToClaimPermissionMap.entrySet().iterator(); 
-		while(mappingsIterator.hasNext())
+		for (Map.Entry<String, ClaimPermission> entry : this.playerNameToClaimPermissionMap.entrySet())
 		{
-			Map.Entry<String, ClaimPermission> entry = mappingsIterator.next();
-			
 			//build up a list for each permission level
-			if(entry.getValue() == ClaimPermission.Build)
+			if (entry.getValue() == ClaimPermission.Build)
 			{
 				builders.add(entry.getKey());
-			}
-			else if(entry.getValue() == ClaimPermission.Inventory)
+			} else if (entry.getValue() == ClaimPermission.Inventory)
 			{
 				containers.add(entry.getKey());
-			}
-			else
+			} else
 			{
 				accessors.add(entry.getKey());
-			}			
+			}
 		}
 		
 		//managers are handled a little differently
-		for(int i = 0; i < this.managers.size(); i++)
+		for (String manager : this.managers)
 		{
-			managers.add(this.managers.get(i));
+			managers.add(manager);
 		}
 	}
 	
@@ -815,10 +804,10 @@ public class Claim
 		else if(excludeSubdivisions)
 		{
 			//search all subdivisions to see if the location is in any of them
-			for(int i = 0; i < this.children.size(); i++)
+			for (Claim aChildren : this.children)
 			{
 				//if we find such a subdivision, return false
-				if(this.children.get(i).contains(location, ignoreHeight, true))
+				if (aChildren.contains(location, ignoreHeight, true))
 				{
 					return false;
 				}
@@ -865,14 +854,12 @@ public class Claim
 			this.getLesserBoundaryCorner().getBlockZ() < otherClaim.getLesserBoundaryCorner().getBlockZ() &&
 			this.getGreaterBoundaryCorner().getBlockZ() > otherClaim.getGreaterBoundaryCorner().getBlockZ() )
 			return true;
-			
-		if(	this.getGreaterBoundaryCorner().getBlockX() <= otherClaim.getGreaterBoundaryCorner().getBlockX() && 
-			this.getGreaterBoundaryCorner().getBlockX() >= otherClaim.getLesserBoundaryCorner().getBlockX() && 
-			this.getLesserBoundaryCorner().getBlockZ() < otherClaim.getLesserBoundaryCorner().getBlockZ() &&
-			this.getGreaterBoundaryCorner().getBlockZ() > otherClaim.getGreaterBoundaryCorner().getBlockZ() )
-			return true;
-		
-		return false;
+
+		return this.getGreaterBoundaryCorner().getBlockX() <= otherClaim.getGreaterBoundaryCorner().getBlockX() &&
+				this.getGreaterBoundaryCorner().getBlockX() >= otherClaim.getLesserBoundaryCorner().getBlockX() &&
+				this.getLesserBoundaryCorner().getBlockZ() < otherClaim.getLesserBoundaryCorner().getBlockZ() &&
+				this.getGreaterBoundaryCorner().getBlockZ() > otherClaim.getGreaterBoundaryCorner().getBlockZ();
+
 	}
 	
 	/**
@@ -906,13 +893,12 @@ public class Claim
 			{
 				Chunk chunk = lesserChunk.getWorld().getChunkAt(x, z);
 				Entity [] entities = chunk.getEntities();
-				for(int i = 0; i < entities.length; i++)
+				for (Entity entity : entities)
 				{
-					Entity entity = entities[i];
-					if(!(entity instanceof Player) && this.contains(entity.getLocation(), false, false))
+					if (!(entity instanceof Player) && this.contains(entity.getLocation(), false, false))
 					{
 						totalEntities++;
-						if(totalEntities > maxEntities) entity.remove();
+						if (totalEntities > maxEntities) entity.remove();
 					}
 				}
 			}

@@ -35,9 +35,9 @@ public class DatabaseDataStore extends DataStore
 {
 	private Connection databaseConnection = null;
 	
-	private String databaseUrl;
-	private String userName;
-	private String password;
+	private final String databaseUrl;
+	private final String userName;
+	private final String password;
 	
 	DatabaseDataStore(String url, String userName, String password) throws Exception
 	{
@@ -105,7 +105,7 @@ public class DatabaseDataStore extends DataStore
 			String name = results.getString("name");
 			
 			//ignore non-groups.  all group names start with a dollar sign.
-			if(!name.startsWith("$")) continue;
+			if(!(name.length() > 0 && name.charAt(0) == '$')) continue;
 			
 			String groupName = name.substring(1);
 			if(groupName == null || groupName.isEmpty()) continue;  //defensive coding, avoid unlikely cases
@@ -194,7 +194,7 @@ public class DatabaseDataStore extends DataStore
 				
 				//look for any subdivisions for this claim
 				Statement statement2 = this.databaseConnection.createStatement();
-				ResultSet childResults = statement2.executeQuery("SELECT * FROM griefprevention_claimdata WHERE parentid=" + topLevelClaim.id + ";");
+				ResultSet childResults = statement2.executeQuery("SELECT * FROM griefprevention_claimdata WHERE parentid=" + topLevelClaim.id + ';');
 				
 				while(childResults.next())
 				{			
@@ -237,10 +237,10 @@ public class DatabaseDataStore extends DataStore
 				//can load without erroring out.
 			}
 		}
-		
-		for(int i = 0; i < claimsToRemove.size(); i++)
+
+		for (Claim aClaimsToRemove : claimsToRemove)
 		{
-			this.deleteClaimFromSecondaryStorage(claimsToRemove.get(i));
+			this.deleteClaimFromSecondaryStorage(aClaimsToRemove);
 		}
 		
 		super.initialize();
@@ -274,7 +274,7 @@ public class DatabaseDataStore extends DataStore
 	}
 	
 	//actually writes claim data to the database
-	synchronized private void writeClaimData(Claim claim) throws SQLException
+	private synchronized void writeClaimData(Claim claim) throws SQLException
 	{
 		String lesserCornerString = this.locationToString(claim.getLesserBoundaryCorner());
 		String greaterCornerString = this.locationToString(claim.getGreaterBoundaryCorner());
@@ -287,28 +287,28 @@ public class DatabaseDataStore extends DataStore
 		
 		claim.getPermissions(builders, containers, accessors, managers);
 		
-		String buildersString = "";
-		for(int i = 0; i < builders.size(); i++)
+		StringBuilder buildersString = new StringBuilder();
+		for (String builder : builders)
 		{
-			buildersString += builders.get(i) + ";";
+			buildersString.append(builder).append(';');
 		}
 		
-		String containersString = "";
-		for(int i = 0; i < containers.size(); i++)
+		StringBuilder containersString = new StringBuilder();
+		for (String container : containers)
 		{
-			containersString += containers.get(i) + ";";
+			containersString.append(container).append(';');
 		}
 		
-		String accessorsString = "";
-		for(int i = 0; i < accessors.size(); i++)
+		StringBuilder accessorsString = new StringBuilder();
+		for (String accessor : accessors)
 		{
-			accessorsString += accessors.get(i) + ";";
+			accessorsString.append(accessor).append(';');
 		}
 
-		String managersString = "";
-		for(int i = 0; i < managers.size(); i++)
+		StringBuilder managersString = new StringBuilder();
+		for (String manager : managers)
 		{
-			managersString += managers.get(i) + ";";
+			managersString.append(manager).append(';');
 		}
 		
 		long parentId;
@@ -336,18 +336,24 @@ public class DatabaseDataStore extends DataStore
 			this.refreshDataConnection();
 			
 			Statement statement = databaseConnection.createStatement();
-			statement.execute("INSERT INTO griefprevention_claimdata VALUES(" +
-					id + ", '" +
-					owner + "', '" +
-					lesserCornerString + "', '" +
-					greaterCornerString + "', '" +
-					buildersString + "', '" +
-					containersString + "', '" +
-					accessorsString + "', '" +
-					managersString + "', " +
-					parentId +	", " +
-					claim.neverdelete +
-					");");
+			try {
+				statement.execute("INSERT INTO griefprevention_claimdata VALUES(" +
+						id + ", '" +
+						owner + "', '" +
+						lesserCornerString + "', '" +
+						greaterCornerString + "', '" +
+						buildersString + "', '" +
+						containersString + "', '" +
+						accessorsString + "', '" +
+						managersString + "', " +
+						parentId +	", " +
+						claim.neverdelete +
+						");");
+			}
+			finally
+			{
+				statement.close();
+			}
 		}
 		catch(SQLException e)
 		{
@@ -365,8 +371,8 @@ public class DatabaseDataStore extends DataStore
 			this.refreshDataConnection();
 			
 			Statement statement = this.databaseConnection.createStatement();
-			statement.execute("DELETE FROM griefprevention_claimdata WHERE id=" + claim.id + ";");			
-			statement.execute("DELETE FROM griefprevention_claimdata WHERE parentid=" + claim.id + ";");
+			statement.execute("DELETE FROM griefprevention_claimdata WHERE id=" + claim.id + ';');
+			statement.execute("DELETE FROM griefprevention_claimdata WHERE parentid=" + claim.id + ';');
 		}
 		catch(SQLException e)
 		{
@@ -413,7 +419,7 @@ public class DatabaseDataStore extends DataStore
 	
 	//saves changes to player data.  MUST be called after you're done making changes, otherwise a reload will lose them
 	@Override
-	synchronized public void savePlayerData(String playerName, PlayerData playerData)
+	public synchronized void savePlayerData(String playerName, PlayerData playerData)
 	{
 		//never save data for the "administrative" account.  an empty string for player name indicates administrative account
 		if(playerName.length() == 0) return;
@@ -467,7 +473,7 @@ public class DatabaseDataStore extends DataStore
 	synchronized void saveGroupBonusBlocks(String groupName, int currentValue)
 	{
 		//group bonus blocks are stored in the player data table, with player name = $groupName
-		String playerName = "$" + groupName;
+		String playerName = '$' + groupName;
 		PlayerData playerData = new PlayerData();
 		playerData.bonusClaimBlocks = currentValue;
 		

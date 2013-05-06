@@ -31,9 +31,9 @@ import org.bukkit.*;
 //manages data stored in the file system
 public class FlatFileDataStore extends DataStore
 {
-	private final static String playerDataFolderPath = dataLayerFolderPath + File.separator + "PlayerData";
-	private final static String claimDataFolderPath = dataLayerFolderPath + File.separator + "ClaimData";
-	private final static String nextClaimIdFilePath = claimDataFolderPath + File.separator + "_nextClaimID";
+	private static final String playerDataFolderPath = dataLayerFolderPath + File.separator + "PlayerData";
+	private static final String claimDataFolderPath = dataLayerFolderPath + File.separator + "ClaimData";
+	private static final String nextClaimIdFilePath = claimDataFolderPath + File.separator + "_nextClaimID";
 
 	static boolean hasData()
 	{
@@ -59,37 +59,36 @@ public class FlatFileDataStore extends DataStore
 		//load group data into memory
 		File playerDataFolder = new File(playerDataFolderPath);
 		File [] files = playerDataFolder.listFiles();
-		for(int i = 0; i < files.length; i++)
+		for (File file : files)
 		{
-			File file = files[i];
-			if(!file.isFile()) continue;  //avoids folders
-			
+			if (!file.isFile()) continue;  //avoids folders
+
 			//all group data files start with a dollar sign.  ignoring the rest, which are player data files.			
-			if(!file.getName().startsWith("$")) continue;
-			
+			if (!(file.getName().length() > 0 && file.getName().charAt(0) == '$')) continue;
+
 			String groupName = file.getName().substring(1);
-			if(groupName == null || groupName.isEmpty()) continue;  //defensive coding, avoid unlikely cases
-			
+			if (groupName == null || groupName.isEmpty()) continue;  //defensive coding, avoid unlikely cases
+
 			BufferedReader inStream = null;
 			try
 			{
 				inStream = new BufferedReader(new FileReader(file.getAbsolutePath()));
 				String line = inStream.readLine();
-				
+
 				int groupBonusBlocks = Integer.parseInt(line);
-				
+
 				this.permissionToBonusBlocksMap.put(groupName, groupBonusBlocks);
-			}
-			catch(Exception e)
+			} catch (Exception e)
 			{
-				 GriefPrevention.AddLogEntry("Unable to load group bonus block data from file \"" + file.getName() + "\": " + e.getMessage());
+				GriefPrevention.AddLogEntry("Unable to load group bonus block data from file \"" + file.getName() + "\": " + e.getMessage());
 			}
-			
+
 			try
 			{
-				if(inStream != null) inStream.close();					
+				if (inStream != null) inStream.close();
+			} catch (IOException exception)
+			{
 			}
-			catch(IOException exception) {}
 		}
 		
 		//load next claim number from file
@@ -126,7 +125,7 @@ public class FlatFileDataStore extends DataStore
 			if(files[i].isFile())  //avoids folders
 			{
 				//skip any file starting with an underscore, to avoid the _nextClaimID file.
-				if(files[i].getName().startsWith("_")) continue;
+				if(files[i].getName().length() > 0 && files[i].getName().charAt(0) == '_') continue;
 				
 				//the filename is the claim ID.  try to parse it
 				long claimID;
@@ -142,7 +141,7 @@ public class FlatFileDataStore extends DataStore
 				{
 					claimID = this.nextClaimID;
 					this.incrementNextClaimID();
-					File newFile = new File(claimDataFolderPath + File.separator + String.valueOf(this.nextClaimID));
+					File newFile = new File(claimDataFolderPath + File.separator + this.nextClaimID);
 					files[i].renameTo(newFile);
 					files[i] = newFile;
 				}
@@ -309,7 +308,7 @@ public class FlatFileDataStore extends DataStore
 	}
 	
 	//actually writes claim data to an output stream
-	synchronized private void writeClaimData(Claim claim, BufferedWriter outStream) throws IOException
+	private synchronized void writeClaimData(Claim claim, BufferedWriter outStream) throws IOException
 	{
 		//first line is lesser boundary corner location
 		outStream.write(this.locationToString(claim.getLesserBoundaryCorner()));
@@ -331,30 +330,30 @@ public class FlatFileDataStore extends DataStore
 		claim.getPermissions(builders, containers, accessors, managers);
 		
 		//fourth line is list of players with build permission
-		for(int i = 0; i < builders.size(); i++)
+		for (String builder : builders)
 		{
-			outStream.write(builders.get(i) + ";");
+			outStream.write(builder + ';');
 		}
 		outStream.newLine();
 		
 		//fifth line is list of players with container permission
-		for(int i = 0; i < containers.size(); i++)
+		for (String container : containers)
 		{
-			outStream.write(containers.get(i) + ";");
+			outStream.write(container + ';');
 		}
 		outStream.newLine();
 		
 		//sixth line is list of players with access permission
-		for(int i = 0; i < accessors.size(); i++)
+		for (String accessor : accessors)
 		{
-			outStream.write(accessors.get(i) + ";");
+			outStream.write(accessor + ';');
 		}
 		outStream.newLine();
 		
 		//seventh line is list of players who may grant permissions for others
-		for(int i = 0; i < managers.size(); i++)
+		for (String manager : managers)
 		{
-			outStream.write(managers.get(i) + ";");
+			outStream.write(manager + ';');
 		}
 		outStream.newLine();
 		
@@ -456,7 +455,7 @@ public class FlatFileDataStore extends DataStore
 	
 	//saves changes to player data.  MUST be called after you're done making changes, otherwise a reload will lose them
 	@Override
-	synchronized public void savePlayerData(String playerName, PlayerData playerData)
+	public synchronized void savePlayerData(String playerName, PlayerData playerData)
 	{
 		//never save data for the "administrative" account.  an empty string for claim owner indicates administrative account
 		if(playerName.length() == 0) return;
@@ -553,7 +552,7 @@ public class FlatFileDataStore extends DataStore
 		try
 		{
 			//open the group's file
-			File groupDataFile = new File(playerDataFolderPath + File.separator + "$" + groupName);
+			File groupDataFile = new File(playerDataFolderPath + File.separator + '$' + groupName);
 			groupDataFile.createNewFile();
 			outStream = new BufferedWriter(new FileWriter(groupDataFile));
 			
@@ -589,24 +588,21 @@ public class FlatFileDataStore extends DataStore
 		}
 		
 		//migrate groups
-		Iterator<String> groupNamesEnumerator = this.permissionToBonusBlocksMap.keySet().iterator();
-		while(groupNamesEnumerator.hasNext())
+		for (String groupName : this.permissionToBonusBlocksMap.keySet())
 		{
-			String groupName = groupNamesEnumerator.next();
 			databaseStore.saveGroupBonusBlocks(groupName, this.permissionToBonusBlocksMap.get(groupName));
 		}
 		
 		//migrate players
 		File playerDataFolder = new File(playerDataFolderPath);
 		File [] files = playerDataFolder.listFiles();
-		for(int i = 0; i < files.length; i++)
+		for (File file : files)
 		{
-			File file = files[i];
-			if(!file.isFile()) continue;  //avoids folders
-			
+			if (!file.isFile()) continue;  //avoids folders
+
 			//all group data files start with a dollar sign.  ignoring those, already handled above
-			if(file.getName().startsWith("$")) continue;
-			
+			if (file.getName().length() > 0 && file.getName().charAt(0) == '$') continue;
+
 			String playerName = file.getName();
 			databaseStore.savePlayerData(playerName, this.getPlayerData(playerName));
 			this.clearCachedPlayerData(playerName);
@@ -624,12 +620,10 @@ public class FlatFileDataStore extends DataStore
 		File playersBackupFolder;
 		do
 		{
-			String claimsFolderBackupPath = claimDataFolderPath;
-			if(i > 0) claimsFolderBackupPath += String.valueOf(i);
+			String claimsFolderBackupPath = claimDataFolderPath + (i > 0 ? i : "");
 			claimsBackupFolder = new File(claimsFolderBackupPath);
 			
-			String playersFolderBackupPath = playerDataFolderPath;
-			if(i > 0) playersFolderBackupPath += String.valueOf(i);
+			String playersFolderBackupPath = playerDataFolderPath + (i > 0 ? i : "");
 			playersBackupFolder = new File(playersFolderBackupPath);
 			i++;
 		} while(claimsBackupFolder.exists() || playersBackupFolder.exists());
@@ -640,7 +634,7 @@ public class FlatFileDataStore extends DataStore
 		claimsFolder.renameTo(claimsBackupFolder);
 		playersFolder.renameTo(playersBackupFolder);			
 		
-		GriefPrevention.AddLogEntry("Backed your file system data up to " + claimsBackupFolder.getName() + " and " + playersBackupFolder.getName() + ".");
+		GriefPrevention.AddLogEntry("Backed your file system data up to " + claimsBackupFolder.getName() + " and " + playersBackupFolder.getName() + '.');
 		GriefPrevention.AddLogEntry("If your migration encountered any problems, you can restore those data with a quick copy/paste.");
 		GriefPrevention.AddLogEntry("When you're satisfied that all your data have been safely migrated, consider deleting those folders.");
 	}

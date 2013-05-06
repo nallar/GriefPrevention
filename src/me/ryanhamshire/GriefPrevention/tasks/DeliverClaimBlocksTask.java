@@ -40,41 +40,42 @@ public class DeliverClaimBlocksTask implements Runnable
 		if(accruedBlocks < 0) accruedBlocks = 1;
 		
 		//for each online player
-		for(int i = 0; i < players.length; i++)
+		for (Player player : players)
 		{
-			Player player = players[i];
 			DataStore dataStore = GriefPrevention.instance.dataStore;
 			PlayerData playerData = dataStore.getPlayerData(player.getName());
-			
+
 			Location lastLocation = playerData.lastAfkCheckLocation;
 			try  //distance squared will throw an exception if the player has changed worlds
 			{
 				//if he's not in a vehicle and has moved at least three blocks since the last check
 				//and he's not being pushed around by fluids
-				if(!player.isInsideVehicle() && 
-				   (lastLocation == null || lastLocation.distanceSquared(player.getLocation()) >= 9) &&
-				   !player.getLocation().getBlock().isLiquid())
-				{					
+				if (!player.isInsideVehicle() &&
+						(lastLocation == null || lastLocation.distanceSquared(player.getLocation()) >= 9) &&
+						!player.getLocation().getBlock().isLiquid())
+				{
 					//if player is over accrued limit, accrued limit was probably reduced in config file AFTER he accrued
 					//in that case, leave his blocks where they are
-					if(playerData.accruedClaimBlocks > GriefPrevention.instance.config_claims_maxAccruedBlocks) continue;
-					
+					if (playerData.accruedClaimBlocks > GriefPrevention.instance.config_claims_maxAccruedBlocks)
+						continue;
+
 					//add blocks
 					playerData.accruedClaimBlocks += accruedBlocks;
-					
+
 					//respect limits
-					if(playerData.accruedClaimBlocks > GriefPrevention.instance.config_claims_maxAccruedBlocks)
+					if (playerData.accruedClaimBlocks > GriefPrevention.instance.config_claims_maxAccruedBlocks)
 					{
-						playerData.accruedClaimBlocks = GriefPrevention.instance.config_claims_maxAccruedBlocks; 
+						playerData.accruedClaimBlocks = GriefPrevention.instance.config_claims_maxAccruedBlocks;
 					}
-					
+
 					//intentionally NOT saving data here to reduce overall secondary storage access frequency
 					//many other operations will cause this players data to save, including his eventual logout
 					//dataStore.savePlayerData(player.getName(), playerData);
 				}
+			} catch (Exception e)
+			{
 			}
-			catch(Exception e) { }
-			
+
 			//remember current location for next time
 			playerData.lastAfkCheckLocation = player.getLocation();
 		}

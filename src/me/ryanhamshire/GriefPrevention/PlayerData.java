@@ -143,9 +143,8 @@ public class PlayerData
 	public int getRemainingClaimBlocks()
 	{
 		int remainingBlocks = this.accruedClaimBlocks + this.bonusClaimBlocks;
-		for(int i = 0; i < this.claims.size(); i++)
+		for (Claim claim : this.claims)
 		{
-			Claim claim = this.claims.get(i);
 			remainingBlocks -= claim.getArea();
 		}
 		

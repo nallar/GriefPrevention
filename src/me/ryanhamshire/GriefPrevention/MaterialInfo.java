@@ -53,8 +53,8 @@ public class MaterialInfo
 	@Override
 	public String toString()
 	{
-		String returnValue = String.valueOf(this.typeID) + ":" + (this.allDataValues?"*":String.valueOf(this.data));
-		if(this.description != null) returnValue += ":" + this.description;
+		String returnValue = this.typeID + ':' + (this.allDataValues?"*":String.valueOf(this.data));
+		if(this.description != null) returnValue += ':' + this.description;
 		
 		return returnValue;
 	}
