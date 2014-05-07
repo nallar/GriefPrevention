@@ -1,0 +1,148 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<!-- Project information -->
+	<name>GriefPrevention</name>
+	<groupId>me.ryanhamshire</groupId>
+	<artifactId>griefprevention</artifactId>
+	<version>dev-SNAPSHOT</version>
+	<url>http://nallar.me/buildservice/</url>
+	<inceptionYear>2012</inceptionYear>
+	<description>Configuration with commands of basic world state - no restarting to change PvP!</description>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<craftbukkit.version>1.6.4-R2.1-SNAPSHOT</craftbukkit.version>
+		<build.number>0</build.number>
+		<currentYear>2014</currentYear>
+		<minimumJreVersion>1.6</minimumJreVersion>
+	</properties>
+
+	<organization>
+		<name>nallar</name>
+		<url>http://nallar.me/</url>
+	</organization>
+
+	<scm>
+		<developerConnection>scm:git:git@github.com:nallar/${project.name}.git</developerConnection>
+		<connection>scm:git:git://github.com/nallar/${project.name}.git</connection>
+		<url>https://github.com/nallar/${project.name}</url>
+	</scm>
+
+	<ciManagement>
+		<system>jenkins</system>
+		<url>http://nallar.me/buildservice</url>
+	</ciManagement>
+
+	
+	<repositories>
+		<repository>
+			<id>central</id>
+			<url>http://repo1.maven.org/maven2/</url>
+		</repository>
+		<repository>
+			<id>bukkit-repo</id>
+			<url>http://repo.bukkit.org/content/groups/public/</url>
+		</repository>
+	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>bukkit-plugins</id>
+			<url>http://repo.bukkit.org/content/groups/public</url>
+		</pluginRepository>
+	</pluginRepositories>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.bukkit</groupId>
+			<artifactId>bukkit</artifactId>
+			<!-- Bukkit API Version, change if out dated -->
+			<version>1.6.4-R2.1-SNAPSHOT</version>
+			<type>jar</type>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+		<groupId>net.milkbowl.vault</groupId>
+			<artifactId>VaultLocal</artifactId>
+			<version>1.0.0</version>
+			<scope>system</scope>
+			<systemPath>${basedir}/Vault.jar</systemPath>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<defaultGoal>clean package install javadoc:javadoc</defaultGoal>
+		
+		<resources>
+			<resource>
+				<targetPath>.</targetPath>
+				<filtering>false</filtering>
+				<directory>${basedir}</directory>
+				<includes>
+					<include>LICENSE</include>
+				</includes>
+			</resource>
+			<resource>
+				<targetPath>.</targetPath>
+				<filtering>true</filtering>
+				<directory>${basedir}/src/main/resources</directory>
+				<includes>
+					<include>*.yml</include>
+				</includes>
+			</resource>
+			<resource>
+				<targetPath>.</targetPath>
+				<filtering>false</filtering>
+				<directory>${basedir}/src/main/resources</directory>
+				<includes>
+					<include>**/*</include>
+				</includes>
+			</resource>
+		</resources>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.5.1</version>
+				<configuration>
+					<source>${minimumJreVersion}</source>
+					<target>${minimumJreVersion}</target>
+					<compilerArgument>-Xlint:all</compilerArgument>
+					<showWarnings>true</showWarnings>
+					<showDeprecation>true</showDeprecation>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.4</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.12</version>
+				<configuration>
+					<redirectTestOutputToFile>true</redirectTestOutputToFile>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.9</version>
+				<configuration>
+					<minmemory>64m</minmemory>
+					<maxmemory>128m</maxmemory>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
