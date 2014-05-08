@@ -2645,9 +2645,13 @@ public class GriefPrevention extends JavaPlugin
 	//sends a color-coded message to a player
 	static void sendMessage(Player player, ChatColor color, Messages messageID, long delayInTicks, String... args)
 	{
-		System.out.println("sending " + messageID + " to player:" + player.getName());
+		// System.out.println("sending " + messageID + " to player:" + player.getName());
 		String message = GriefPrevention.instance.dataStore.getMessage(messageID, args);
-		sendMessage(player, color, message, delayInTicks);
+		if (player == null) {
+			sendMessage(null, color, message);
+		} else {
+			sendMessage(player, color, message, delayInTicks);
+		}
 	}
 	
 	//sends a color-coded message to a player
